@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sorting Visualizer</title>
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  margin: 0;
+  color: #333;
+}
+.container {
+  width: 90%;
+  margin: auto;
+  text-align: center;
+}
+h1 {
+  color: white;
+  margin-top: 20px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 20px;
+}
+.section {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.array-box {
+  display: inline-block;
+  width: 55px;
+  height: 55px;
+  line-height: 55px;
+  margin: 6px;
+  border-radius: 10px;
+  background: #e3e7ff;
+  font-weight: bold;
+  position: relative;
+  transition: 0.3s;
+}
+.highlight {
+  background: #ff4d4d;
+  color: white;
+  transform: scale(1.1);
+}
+.pointer {
+  position: absolute;
+  top: -25px;
+  font-size: 13px;
+  color: #333;
+  font-weight: bold;
+}
+.arrow-down {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 10px solid #333;
+}
+button {
+  margin: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #667eea;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+button:hover {
+  background: #5a67d8;
+}
+#steps {
+  text-align: left;
+  height: 220px;
+  overflow-y: auto;
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 8px;
+}
+#info {
+  text-align: left;
+  margin-top: 20px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.code {
+  background: #1e1e1e;
+  color: #00ffcc;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>✨ Sorting Visualizer</h1>
+
+<h3 style="color:white;">Example Array: [12, 5, 9, 3, 15, 7, 1, 8]</h3>
+
+<button onclick="bubbleSort()">Bubble Sort</button>
+<button onclick="insertionSort()">Insertion Sort</button>
+<button onclick="selectionSort()">Selection Sort</button>
+
+<div id="info"></div>
+
+<div class="layout">
+<div class="section">
+<h2>Visualization</h2>
+<div id="array"></div>
+</div>
+
+<div class="section">
+<h2>Steps</h2>
+<div>
+<button onclick="prevStep()">⬅ Prev</button>
+<button onclick="nextStep()">Next ➡</button>
+</div>
+<div id="steps"></div>
+</div>
+</div>
+</div>
+
+<script>
+let original = [12, 5, 9, 3, 15, 7, 1, 8];
+let arr=[];
+let stepsData=[];
+let currentStep=0;
+
+function setInfo(title, desc, steps, code){
+ document.getElementById("info").innerHTML = `
+ <h2>${title}</h2>
+ <p>${desc}</p>
+ <h3>Steps:</h3>
+ <ol>${steps.map(s=>`<li>${s}</li>`).join("")}</ol>
+ <h3>Java Code:</h3>
+ <pre class='code'>${code}</pre>`;
+}
+
+function resetArray(){
+ arr=[...original];
+ document.getElementById("steps").innerHTML="";
+ displayArray();
+}
+
+function logStep(t,i=-1,j=-1){
+ stepsData.push({array:[...arr], text:t, i:i, j:j});
+}
+
+function displayArray(i=-1,j=-1,customArr=null){
+ let c=document.getElementById("array");
+ c.innerHTML="";
+ let data = customArr || arr;
+
+ data.forEach((v,index)=>{
+  let d=document.createElement("div");
+  d.className="array-box";
+  d.innerText=v;
+
+  if(index===i||index===j) d.classList.add("highlight");
+
+  if(index===i){
+    let p=document.createElement("div");
+    p.className="pointer";
+    p.innerText="i";
+    d.appendChild(p);
+    let arrow=document.createElement("div");
+    arrow.className="arrow-down";
+    d.appendChild(arrow);
+  }
+
+  if(index===j){
+    let p=document.createElement("div");
+    p.className="pointer";
+    p.innerText="j";
+    d.appendChild(p);
+    let arrow=document.createElement("div");
+    arrow.className="arrow-down";
+    d.appendChild(arrow);
+  }
+
+  c.appendChild(d);
+ });
+}
+
+function showStep(index){
+ if(index<0 || index>=stepsData.length) return;
+ currentStep=index;
+ let step=stepsData[index];
+ displayArray(step.i,step.j,step.array);
+ document.getElementById("steps").innerHTML = step.text;
+}
+
+function nextStep(){ showStep(currentStep+1); }
+function prevStep(){ showStep(currentStep-1); }
+
+function bubbleSort(){
+ setInfo(
+  "1. Bubble Sort",
+  "Bubble Sort works by repeatedly swapping adjacent elements if they are in the wrong order, causing the largest values to \"bubble\" to the end of the array.",
+  [
+   "Start at the first element (index 0).",
+   "Compare the current element with the next one.",
+   "If the current element is greater than the next, swap them.",
+   "Move to the next adjacent pair and repeat until the end of the unsorted part.",
+   "Repeat the entire process until no more swaps are needed."
+  ],
+`public void bubbleSort(int[] arr) {
+    int n = arr.length;
+    boolean swapped;
+    for (int i = 0; i < n - 1; i++) {
+        swapped = false;
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+                swapped = true;
+            }
+        }
+        if (!swapped) break;
+    }
+}`);
+
+ resetArray();
+ stepsData=[];
+ for(let i=0;i<arr.length-1;i++){
+  logStep(`Pass ${i+1}`);
+  for(let j=0;j<arr.length-i-1;j++){
+   logStep(`Compare ${arr[j]} and ${arr[j+1]}`,j,j+1);
+   if(arr[j]>arr[j+1]){
+    [arr[j],arr[j+1]]=[arr[j+1],arr[j]];
+    logStep(`Swap -> [${arr}]`,j,j+1);
+   }
+  }
+ }
+ logStep("Sorted Completed");
+ showStep(0);
+}
+
+function insertionSort(){
+ setInfo(
+  "3. Insertion Sort",
+  "Insertion Sort builds the final sorted array one item at a time by \"inserting\" each unsorted element into its correct position within the already sorted part.",
+  [
+   "Start from the second element (the first is considered sorted).",
+   "Store the current element (the \"key\").",
+   "Compare the key with elements in the sorted part (to its left).",
+   "Shift any elements larger than the key one position to the right.",
+   "Place the key in its correct hole.",
+   "Repeat for all elements."
+  ],
+`public void insertionSort(int[] arr) {
+    int n = arr.length;
+    for (int i = 1; i < n; ++i) {
+        int key = arr[i];
+        int j = i - 1;
+        while (j >= 0 && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j = j - 1;
+        }
+        arr[j + 1] = key;
+    }
+}`);
+
+ resetArray();
+ stepsData=[];
+ for(let i=1;i<arr.length;i++){
+  let key=arr[i]; let j=i-1;
+  logStep(`Insert ${key}`);
+  while(j>=0 && arr[j]>key){
+   logStep(`Shift ${arr[j]}`,j,j+1);
+   arr[j+1]=arr[j]; j--;
+  }
+  arr[j+1]=key;
+  logStep(`Placed -> [${arr}]`);
+ }
+ logStep("Sorted Completed");
+ showStep(0);
+}
+
+function selectionSort(){
+ setInfo(
+  "2. Selection Sort",
+  "Selection Sort maintains a sorted and unsorted section. It repeatedly finds the minimum element from the unsorted part and moves it to the beginning.",
+  [
+   "Assume the first unsorted element is the minimum.",
+   "Search through the remaining unsorted part to find the actual smallest element.",
+   "Swap that smallest element with the first element of the unsorted part.",
+   "Move the boundary between the sorted and unsorted sections one position to the right.",
+   "Repeat until the array is fully sorted."
+  ],
+`public void selectionSort(int[] arr) {
+    int n = arr.length;
+    for (int i = 0; i < n - 1; i++) {
+        int min_idx = i;
+        for (int j = i + 1; j < n; j++) {
+            if (arr[j] < arr[min_idx]) {
+                min_idx = j;
+            }
+        }
+        int temp = arr[min_idx];
+        arr[min_idx] = arr[i];
+        arr[i] = temp;
+    }
+}`);
+
+ resetArray();
+ stepsData=[];
+ for(let i=0;i<arr.length-1;i++){
+  let min=i;
+  for(let j=i+1;j<arr.length;j++){
+   logStep(`Compare ${arr[min]} and ${arr[j]}`,min,j);
+   if(arr[j]<arr[min]){
+    min=j;
+    logStep(`New min ${arr[min]}`);
+   }
+  }
+  [arr[i],arr[min]]=[arr[min],arr[i]];
+  logStep(`Swap -> [${arr}]`,i,min);
+ }
+ logStep("Sorted Completed");
+ showStep(0);
+}
+
+resetArray();
+</script>
+
+</body>
+</html>
